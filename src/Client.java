@@ -3,8 +3,9 @@ import java.security.*;
 
 import cipher.AESGCM_Cipher;
 import cipher.AES_KeyGen;
-import dh.DiffieHellman;
 import utils.ConvertingUtils;
+import dh.DiffieHellman;
+import protocol.Message;
 
 import java.io.*;
 import javax.crypto.SecretKey;
@@ -96,13 +97,6 @@ public class Client {
 
         System.out.println("Chat started: ");
         try{
-
-            /*
-             * Diffie-Hellman Key Exchange. 
-             * After Generating it's own Key Pair (Public and Private), it send the (encoded) pubkey to the other clients,
-             * then it wait the other client's key. 
-             * Finally it generate the shared key,
-            */
             KeyPair dhKeyPair = DiffieHellman.generateDHKeyPair();
             PublicKey pubKey = dhKeyPair.getPublic();
             PrivateKey privKey = dhKeyPair.getPrivate();
@@ -136,14 +130,25 @@ public class Client {
             MessageReceiver messageReceiver = new MessageReceiver(inputSocket, cipher);
             messageReceiver.start();
             //System.out.println("MessageReceiver thread started...");
+            long seqCounter = 0;
 
             while((message = stdIn.readLine()) != null){
 
-                // Sending Message
-                byte [] ecryptedMex = cipher.encrypt(ConvertingUtils.toByteArray(message));
-                //System.out.println("[Encrypted message -> " + ConvertingUtils.toHexString(ecryptedMex)+"]");
-                outputSocket.writeInt(ecryptedMex.length);
-                outputSocket.write(ecryptedMex);
+                // Costruzione del messaggio con numero di sequenza
+                Message outMessage = new Message(seqCounter++, ConvertingUtils.toByteArray(message));
+                byte[] aad = outMessage.seqNumberToAAD();
+
+                // Cifratura del payload, autenticando anche il numero di sequenza (AAD)
+                byte[] encryptedPayload = cipher.encrypt(outMessage.getPayload(), aad);
+
+                // Pacchetto sul socket: [ AAD (seq, in chiaro) | IV + ciphertext+tag ]
+                byte[] packet = new byte[aad.length + encryptedPayload.length];
+                System.arraycopy(aad, 0, packet, 0, aad.length);
+                System.arraycopy(encryptedPayload, 0, packet, aad.length, encryptedPayload.length);
+
+                //System.out.println("[Encrypted message -> " + ConvertingUtils.toHexString(packet)+"]");
+                outputSocket.writeInt(packet.length);
+                outputSocket.write(packet);
             }
         }catch (Exception e) {
 			System.err.println("Errors: ");

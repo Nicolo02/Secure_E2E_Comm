@@ -24,12 +24,11 @@ public class AESGCM_Cipher {
         this.sr = new SecureRandom();
     }
 
-    /*
-     * Encrypts the given plaintext using AES in GCM mode.
-     * The method generates a random IV, initializes the cipher with the key and IV,
-     * and returns the IV concatenated with the ciphertext in order to allow decryption later.
-     */
     public byte[] encrypt(byte[] plaintext) throws Exception{
+        return encrypt(plaintext, null);
+    }
+
+    public byte[] encrypt(byte[] plaintext, byte[] aad) throws Exception{
 
         byte [] result;
 
@@ -39,7 +38,11 @@ public class AESGCM_Cipher {
 
         Cipher cipher = Cipher.getInstance(ALGORITHM);
         GCMParameterSpec spec = new GCMParameterSpec(MAC_LENGTH, iv);
-        cipher.init(cipher.ENCRYPT_MODE, key, spec);
+        cipher.init(Cipher.ENCRYPT_MODE, key, spec);
+
+        if (aad != null) {
+            cipher.updateAAD(aad);
+        }
 
         // Encrypts the plaintext
         byte[] cipherText = cipher.doFinal(plaintext);
@@ -52,14 +55,11 @@ public class AESGCM_Cipher {
         return result;
     }
 
-    /*
-     * Decrypts the given ciphertext using AES in GCM mode.
-     * The method extracts the IV from the beginning of the ciphertext,
-     * initializes the cipher with the key and IV, and returns the decrypted plaintext.
-     * 
-     * Note: The input should include the IV at the beginning, as produced by the encrypt method.
-    */
     public byte[] decrypt(byte[] input) throws Exception {
+        return decrypt(input, null);
+    }
+
+    public byte[] decrypt(byte[] input, byte[] aad) throws Exception {
 
         // Extract the IV from the beginning of the input
         if (input.length < IV_SIZE) {
@@ -71,6 +71,10 @@ public class AESGCM_Cipher {
         Cipher cipher = Cipher.getInstance(ALGORITHM);
         GCMParameterSpec spec = new GCMParameterSpec(MAC_LENGTH, iv);
         cipher.init(Cipher.DECRYPT_MODE, key, spec);
+
+        if (aad != null) {
+            cipher.updateAAD(aad);
+        }
 
         return cipher.doFinal(ciphertext);
 
