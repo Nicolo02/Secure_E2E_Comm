@@ -37,6 +37,10 @@ public class ProxyThread extends Thread{
 
         try{
 
+            String senderName = inSocket.readUTF();
+            outSocket.writeUTF(senderName);
+            System.out.println("Thread-" + getName() + " Relaying name: " + senderName);
+
             /*
              * Key exchang for Diffie-Hellman: receiving public key
              * from the other client and sending its own public key.
@@ -59,8 +63,7 @@ public class ProxyThread extends Thread{
                     byte[] aad = Arrays.copyOfRange(mex, 0, Message.SEQ_NUMBER_SIZE);
                     try {
                         long seqNumber = Message.aadToSeqNumber(aad);
-                        System.out.println("Thread-" + getName() + " Forwarding message with seq=" + seqNumber +
-                            " (" + len + " byte payload)");
+                        System.out.println("Thread-" + getName() + " Forwarding message from " + senderName + " with seq=" + seqNumber + " (" + len + " byte payload)");
                     } catch (IllegalArgumentException iae) {
                         System.out.println("Thread-" + getName() + " Forwarding malformed packet (" + len + " byte payload)");
                     }

@@ -10,11 +10,13 @@ public class MessageReceiver extends Thread {
     private DataInputStream input;
     private SecureCipher cipher;
     private AntiReplay replayGuard;
+    private String peerName;
 
-    public MessageReceiver(DataInputStream input, SecureCipher cipher) {
+    public MessageReceiver(DataInputStream input, SecureCipher cipher, String peerName) {
         this.input = input;
         this.cipher = cipher;
         this.replayGuard = new AntiReplay();
+        this.peerName = peerName;
     }
 
     public void run() {
@@ -68,7 +70,7 @@ public class MessageReceiver extends Thread {
                 }
 
                 Message inMessage = new Message(seqNumber, decryptedPayload);
-                System.out.println("< OTHER > " + inMessage.getPayloadAsString());
+                System.out.println("< " + peerName + " > " + inMessage.getPayloadAsString());
             }
         } catch (Exception e) {
             System.err.println("Error in MessageReceiver: " + e.getMessage());

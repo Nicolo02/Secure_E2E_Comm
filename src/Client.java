@@ -6,13 +6,14 @@ import cipher.SymmKeyGen;
 import utils.ConvertingUtils;
 import dh.DiffieHellman;
 import protocol.Message;
+import auth.SASCalculator;
 
 import java.io.*;
 import javax.crypto.SecretKey;
 
 public class Client {
 
-    public static final String USAGE = "Usage: java Client serverAddr serverPort";
+    public static final String USAGE = "Usage: java Client serverAddr serverPort yourName";
     public static final int SOCKET_TIMEOUT = 60000;
 
     public static void main(String[] args) {
@@ -22,8 +23,9 @@ public class Client {
          */
         InetAddress addr = null;
         int port = -1;
+        String myName = null;
         try{
-            if(args.length == 2){
+            if(args.length == 3){
                 addr = InetAddress.getByName(args[0]);
                 port = Integer.parseInt(args[1]);
                 if (port < 1024 || port > 65536){
@@ -31,6 +33,12 @@ public class Client {
 					System.out.println(USAGE);
                     System.exit(1);
                 }                
+                myName = args[2];
+                if (myName.isEmpty()){
+                    System.err.println("Il nome non può essere vuoto.");
+                    System.out.println(USAGE);
+                    System.exit(1);
+                }
             }else{
                 System.out.println(USAGE);                
                 System.exit(1);
@@ -97,6 +105,9 @@ public class Client {
 
         System.out.println("Chat started: ");
         try{
+            outputSocket.writeUTF(myName);
+            String peerName = inputSocket.readUTF();
+            System.out.println("In comunicazione con: " + peerName);
             KeyPair dhKeyPair = DiffieHellman.generateDHKeyPair();
             PublicKey pubKey = dhKeyPair.getPublic();
             PrivateKey privKey = dhKeyPair.getPrivate();
@@ -117,6 +128,24 @@ public class Client {
             //System.out.println("Shared secret computed: " + ConvertingUtils.toHexString(sharedSecret));
 
             /*
+            * Verifica dell'identità tramite Short Authentication String (SAS).
+            * Il codice deve essere confrontato con l'interlocutore tramite un canale
+            * diverso da questa chat (telefono, di persona, ecc.): se non coincide,
+            * qualcuno potrebbe essersi inserito nello scambio di chiavi.
+            */
+            String sas = SASCalculator.computeSAS(myName, encodedPubKey, peerName, receivedPubKey_Bytes, sharedSecret);
+            System.out.println("\n=== CODICE DI VERIFICA (SAS) ===");
+            System.out.println("Confronta questo codice con " + peerName + " tramite un canale diverso (telefono, di persona, ecc.): " + sas);
+            System.out.println("Se NON coincide con quello mostrato a " + peerName + ", la connessione potrebbe essere intercettata (Man-in-the-Middle): interrompi la chat.");
+            System.out.print("Il codice coincide? Digita 'si' per continuare, qualsiasi altro input per uscire: ");
+            String confirmation = stdIn.readLine();
+            if (confirmation == null || !confirmation.trim().equalsIgnoreCase("si")) {
+                System.out.println("Verifica fallita o annullata. Chiusura della connessione.");
+                socket.close();
+                System.exit(1);
+            }
+
+            /*
              * AES-GCM Cipher initialization
              * The cipher is initialized with the shared secret as key
              */
@@ -127,7 +156,7 @@ public class Client {
             /*
              * Strarting Clients communcations 
              */
-            MessageReceiver messageReceiver = new MessageReceiver(inputSocket, cipher);
+            MessageReceiver messageReceiver = new MessageReceiver(inputSocket, cipher, peerName);
             messageReceiver.start();
             //System.out.println("MessageReceiver thread started...");
             long seqCounter = 0;
