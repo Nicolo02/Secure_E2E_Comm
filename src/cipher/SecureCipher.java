@@ -8,7 +8,7 @@ import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
-public class AESGCM_Cipher {
+public class SecureCipher {
 
     private static final String ALGORITHM = "AES/GCM/NoPadding";
     private static final int IV_SIZE = 12; // 96 bit
@@ -19,7 +19,7 @@ public class AESGCM_Cipher {
     private final SecretKey key;
     private final SecureRandom sr;
 
-    public AESGCM_Cipher(SecretKey key){
+    public SecureCipher(SecretKey key){
         this.key = key;
         this.sr = new SecureRandom();
     }

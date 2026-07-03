@@ -1,8 +1,8 @@
 import java.net.*;
 import java.security.*;
 
-import cipher.AESGCM_Cipher;
-import cipher.AES_KeyGen;
+import cipher.SecureCipher;
+import cipher.SymmKeyGen;
 import utils.ConvertingUtils;
 import dh.DiffieHellman;
 import protocol.Message;
@@ -120,9 +120,9 @@ public class Client {
              * AES-GCM Cipher initialization
              * The cipher is initialized with the shared secret as key
              */
-            SecretKey aesKey = AES_KeyGen.deriveAESKey(sharedSecret);
+            SecretKey aesKey = SymmKeyGen.generateSymmetricKey(sharedSecret);
             //System.out.println("Derived AES Key: " + aesKey);
-            AESGCM_Cipher cipher = new AESGCM_Cipher(aesKey);
+            SecureCipher cipher = new SecureCipher(aesKey);
 
             /*
              * Strarting Clients communcations 

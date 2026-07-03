@@ -1,17 +1,17 @@
 import java.io.DataInputStream;
 import java.util.Arrays;
 
-import cipher.AESGCM_Cipher;
+import cipher.SecureCipher;
 import protocol.Message;
 import protocol.AntiReplay;
 
 public class MessageReceiver extends Thread {
 
     private DataInputStream input;
-    private AESGCM_Cipher cipher;
+    private SecureCipher cipher;
     private AntiReplay replayGuard;
 
-    public MessageReceiver(DataInputStream input, AESGCM_Cipher cipher) {
+    public MessageReceiver(DataInputStream input, SecureCipher cipher) {
         this.input = input;
         this.cipher = cipher;
         this.replayGuard = new AntiReplay();

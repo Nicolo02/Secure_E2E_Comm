@@ -6,7 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-public class AES_KeyGen {
+public class SymmKeyGen {
 
     /**
      * Derives a 128-bit AES key from the shared secret using SHA-256.
@@ -15,9 +15,9 @@ public class AES_KeyGen {
      * @param sharedSecret The shared secret byte array.
      * @return A SecretKey object representing the derived AES key.
      */
-    public static SecretKey deriveAESKey(byte[] sharedSecret) throws NoSuchAlgorithmException {
+    public static SecretKey generateSymmetricKey(byte[] sharedSecret) throws NoSuchAlgorithmException {
         MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-        byte[] keyBytes = sha256.digest(sharedSecret); // output = 256 bit
-        return new SecretKeySpec(keyBytes, 0, 16, "AES"); // taglia 128 bit
+        byte[] rawKey = sha256.digest(sharedSecret); // output = 256 bit
+        return new SecretKeySpec(rawKey, 0, 16, "AES"); // taglia 128 bit
     }
 }

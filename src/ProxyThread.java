@@ -5,12 +5,12 @@ import java.util.Arrays;
 import dh.DiffieHellman;
 import protocol.Message;
 
-public class ServerThread extends Thread{
+public class ProxyThread extends Thread{
     
     private Socket clientSocket_input = null;
     private Socket clientSocket_output = null;
 
-    public ServerThread(Socket to, Socket from){
+    public ProxyThread(Socket to, Socket from){
         super();
         this.clientSocket_input = from;
         this.clientSocket_output = to;

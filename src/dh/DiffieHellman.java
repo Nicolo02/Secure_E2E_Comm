@@ -12,7 +12,6 @@ public class DiffieHellman {
      */
     public static final int KEY_SIZE = 2048; 
     
-
     /*
      * Generates a Diffie-Hellman key pair, to be used in the key exchange process.
      * Each client generate its own key pair, which will be used to compute the shared secret

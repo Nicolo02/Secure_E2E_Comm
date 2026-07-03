@@ -1,7 +1,7 @@
 import java.io.*;
 import java.net.*;
 
-public class Server {
+public class Proxy {
        
     public static final String USAGE = "Usage: java Server [serverPort>1024]";
     public static final int DEFAULT_PORT = 9999;
@@ -77,8 +77,8 @@ public class Server {
 
             // Da migliorare
             System.out.println("Server: " + N_CLIENTS + " clients connected, starting threads...");
-            new ServerThread(clientSocket[0], clientSocket[1]).start(); 
-            new ServerThread(clientSocket[1], clientSocket[0]).start(); 
+            new ProxyThread(clientSocket[0], clientSocket[1]).start(); 
+            new ProxyThread(clientSocket[1], clientSocket[0]).start(); 
 
         } catch (Exception e) {
 			System.err.println("Server Error: server's fatal error!\n Shutting down the Server...");
