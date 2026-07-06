@@ -14,7 +14,7 @@ import javax.crypto.SecretKey;
 public class Client {
 
     public static final String USAGE = "Usage: java Client serverAddr serverPort yourName";
-    public static final int SOCKET_TIMEOUT = 60000;
+    public static final int SOCKET_TIMEOUT = 60000 * 5;
 
     public static void main(String[] args) {
 
@@ -35,7 +35,7 @@ public class Client {
                 }                
                 myName = args[2];
                 if (myName.isEmpty()){
-                    System.err.println("Il nome non può essere vuoto.");
+                    System.err.println("Name must not be empty.");
                     System.out.println(USAGE);
                     System.exit(1);
                 }
@@ -127,20 +127,15 @@ public class Client {
             byte[] sharedSecret = DiffieHellman.computeSharedSecret(privKey, peerPubKey);
             //System.out.println("Shared secret computed: " + ConvertingUtils.toHexString(sharedSecret));
 
-            /*
-            * Verifica dell'identità tramite Short Authentication String (SAS).
-            * Il codice deve essere confrontato con l'interlocutore tramite un canale
-            * diverso da questa chat (telefono, di persona, ecc.): se non coincide,
-            * qualcuno potrebbe essersi inserito nello scambio di chiavi.
-            */
+            //Verification of the identity through Short Authentication String (SAS)
             String sas = SASCalculator.computeSAS(myName, encodedPubKey, peerName, receivedPubKey_Bytes, sharedSecret);
             System.out.println("\n=== CODICE DI VERIFICA (SAS) ===");
-            System.out.println("Confronta questo codice con " + peerName + " tramite un canale diverso (telefono, di persona, ecc.): " + sas);
-            System.out.println("Se NON coincide con quello mostrato a " + peerName + ", la connessione potrebbe essere intercettata (Man-in-the-Middle): interrompi la chat.");
-            System.out.print("Il codice coincide? Digita 'si' per continuare, qualsiasi altro input per uscire: ");
+            System.out.println("Check this code with " + peerName + " via a different channel (phone, in person, etc.): " + sas);
+            System.out.println("If it does NOT match the one shown to " + peerName + ", the connection might be intercepted (Man-in-the-Middle): terminate the chat.");
+            System.out.print("Does the code match? Type 'Y' to continue, anything else to exit: ");
             String confirmation = stdIn.readLine();
-            if (confirmation == null || !confirmation.trim().equalsIgnoreCase("si")) {
-                System.out.println("Verifica fallita o annullata. Chiusura della connessione.");
+            if (confirmation == null || !confirmation.trim().equalsIgnoreCase("y")) {
+                System.out.println("Verification failed or cancelled. Closing the connection.");
                 socket.close();
                 System.exit(1);
             }

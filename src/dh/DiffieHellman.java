@@ -6,17 +6,12 @@ import java.security.spec.X509EncodedKeySpec;
 
 public class DiffieHellman {
 
-    /*
-     * Using 2048 bits lenght to increase difficulty in computing
-     * the discrete logarithm and compromise the shared secret 
-     */
+    
+    //Using 2048 bits lenght to increase difficulty in computing the discrete logarithm and compromise the shared secret
     public static final int KEY_SIZE = 2048; 
     
-    /*
-     * Generates a Diffie-Hellman key pair, to be used in the key exchange process.
-     * Each client generate its own key pair, which will be used to compute the shared secret
-     * with the other client.
-     */
+    //Generates a Diffie-Hellman key pair, to be used in the key exchange process.
+    //Each client generate its own key pair, which will be used to compute the shared secret with the other client.
     public static KeyPair generateDHKeyPair() throws NoSuchAlgorithmException{
         
         KeyPairGenerator keysGen = KeyPairGenerator.getInstance("DH");
@@ -24,11 +19,9 @@ public class DiffieHellman {
         return keysGen.genKeyPair();
     }
 
-    /*
-     * Generetes the Shared Secret using it's own private key and the public key received from the other client.
-     * The shared secret is computed using the Diffie-Hellman key agreement protocol.
-     * The shared secret is the same for both clients, as long as they use the same DH parameters.
-     */
+    // Generates the Shared Secret using it's own private key and the public key received from the other client.
+    // The shared secret is computed using the Diffie-Hellman key agreement protocol.
+    // The shared secret is the same for both clients, as long as they use the same DH parameters.
     public static byte[] computeSharedSecret(PrivateKey privKey, PublicKey received_pubKey)throws NoSuchAlgorithmException, InvalidKeyException {
         KeyAgreement keyagr = KeyAgreement.getInstance("DH");
         keyagr.init(privKey);
@@ -36,9 +29,8 @@ public class DiffieHellman {
         return keyagr.generateSecret();
     }
 
-    /*
-     * Returns the encoded public key, which is used to send it to the other client by sockets
-     */
+    
+    //Returns the encoded public key, which is used to send it to the other client by sockets
     public static byte[] getEncodedPubKey(PublicKey pubKey) {
         if (pubKey == null) {
             return null;
@@ -46,10 +38,8 @@ public class DiffieHellman {
         return pubKey.getEncoded();
     }
 
-    /*
-     * Decodes the public key received from the other client, (encoded in X.509 format)
-     * This is used to reconstruct the PublicKey object from the byte array received.
-     */
+    //Decodes the public key received from the other client, (encoded in X.509 format)
+    //This is used to reconstruct the PublicKey object from the byte array received.
     public static PublicKey decodePublicKey(byte[] encodedKey) throws Exception {
         KeyFactory keyFactory = KeyFactory.getInstance("DH");
         X509EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedKey);

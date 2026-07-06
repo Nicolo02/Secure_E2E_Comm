@@ -48,8 +48,11 @@ public class MessageReceiver extends Thread {
                     continue;
                 }
 
-                // Controllo anti-replay: scarta il messaggio se la sequenza non è
-                // strettamente successiva all'ultima accettata, PRIMA di decifrare.
+                /*
+                 * Anti-replay check: discard the message if the sequence number is not
+                 * strictly increasing with respect to the last accepted one.
+                 * This is done before decrypting.
+                 */
                 if (!replayGuard.isValid(seqNumber)) {
                     System.err.println("Discarded message with sequence number " + seqNumber +
                         " (replay, duplicate or out-of-order - last accepted was " +
@@ -62,8 +65,8 @@ public class MessageReceiver extends Thread {
                 try {
                     decryptedPayload = cipher.decrypt(encryptedPayload, aad);
                 } catch (Exception decryptionException) {
-                    // Tag di autenticazione non valido: il messaggio (o il suo AAD) è stato
-                    // manomesso. Lo scartiamo senza terminare il thread di ricezione.
+                    // Authentication tag not valid: the message (or its AAD) has been tampered with.
+                    // It gets discarded without terminating the reception thread.
                     System.err.println("Discarded message with sequence number " + seqNumber +
                         ": authentication failed (" + decryptionException.getMessage() + ").");
                     continue;

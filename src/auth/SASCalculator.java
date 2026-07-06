@@ -8,37 +8,22 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 /*
- * Calcola uno Short Authentication String (SAS): un codice numerico breve,
- * derivato dai nomi, dalle chiavi pubbliche DH e dal segreto condiviso di
- * entrambi i client, pensato per essere confrontato manualmente dagli utenti
- * (a voce, di persona, o tramite un altro canale) per rilevare un eventuale
- * Man-in-the-Middle nello scambio Diffie-Hellman.
- *
- * Principio: Diffie-Hellman, da solo, non può autenticare le parti. Se un
- * attaccante si inserisce nello scambio, stabilirà DUE segreti condivisi
- * distinti (uno con ciascun client) e quindi ciascun client calcolerà un SAS
- * diverso. Confrontando i due codici fuori banda, l'incoerenza tradisce
- * l'attacco.
- *
- * Il calcolo è simmetrico rispetto al ruolo (A o B): i due "record"
- * (nome + chiave pubblica) vengono ordinati canonicamente prima di essere
- * concatenati, cosicché entrambi i client - indipendentemente da chi ha
- * iniziato la connessione - ottengano esattamente lo stesso codice quando
- * non c'è un attaccante nel mezzo.
- */
+ This class computes a Short Authentication String (SAS): a short numeric code derived from the names, 
+ DH public keys and shared secret of both clients, intended to be manually compared by the users (by voice, in person, or through another channel)
+ to detect a potential Man-in-the-Middle in the Diffie-Hellman exchange.
+
+ If an attacker intercepts the DH exchange, they will establish two distinct shared secrets (one with each client),
+ leading to different SAS codes.
+*/
+
 public class SASCalculator {
 
-    private static final int CODE_MODULO = 1_000_000; // codice a 6 cifre decimali
+    private static final int CODE_MODULO = 1_000_000;
 
     private SASCalculator() {
-        // utility class, non istanziabile
+        // utility class
     }
 
-    /*
-     * Calcola il codice SAS a partire da nome e chiave pubblica DH (encoded,
-     * X.509) di entrambi i client e dal segreto condiviso calcolato tramite
-     * Diffie-Hellman.
-     */
     public static String computeSAS(String nameA, byte[] pubKeyA,
                                      String nameB, byte[] pubKeyB,
                                      byte[] sharedSecret) throws IOException, NoSuchAlgorithmException {
@@ -62,7 +47,7 @@ public class SASCalculator {
         sha256.update(sharedSecret);
         byte[] digest = sha256.digest();
 
-        // Primi 4 byte del digest -> intero positivo -> 6 cifre decimali
+        // First 4 bytes of the digest -> positive integer -> 6 decimal digits
         int code = ((digest[0] & 0xFF) << 24) | ((digest[1] & 0xFF) << 16) |
                    ((digest[2] & 0xFF) << 8) | (digest[3] & 0xFF);
         code = Math.abs(code) % CODE_MODULO;
