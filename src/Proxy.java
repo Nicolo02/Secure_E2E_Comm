@@ -46,10 +46,10 @@ public class Proxy {
         try{
             serverSocket = new ServerSocket(port);
             serverSocket.setReuseAddress(true);
-            System.out.println("Server activated!");
-            System.out.println("Created server socket: " + serverSocket);
+            System.out.println("Proxy activated!");
+            System.out.println("Created proxy socket: " + serverSocket);
         }catch (Exception e) {
-            System.err.println("Server Error: errors during server socket creation " + e.getMessage());
+            System.err.println("Proxy Error: errors during proxy socket creation " + e.getMessage());
             e.printStackTrace();
             serverSocket.close();
             System.exit(1);
@@ -81,7 +81,7 @@ public class Proxy {
             new ProxyThread(clientSocket[1], clientSocket[0]).start(); 
 
         } catch (Exception e) {
-			System.err.println("Server Error: server's fatal error!\n Shutting down the Server...");
+			System.err.println("Proxy Error: proxy's fatal error!\n Shutting down the Proxy...");
 			e.printStackTrace();
 			System.exit(2);
 		}

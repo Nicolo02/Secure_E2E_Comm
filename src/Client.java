@@ -107,7 +107,7 @@ public class Client {
         try{
             outputSocket.writeUTF(myName);
             String peerName = inputSocket.readUTF();
-            System.out.println("In comunicazione con: " + peerName);
+            System.out.println("Communicating with: " + peerName);
             KeyPair dhKeyPair = DiffieHellman.generateDHKeyPair();
             PublicKey pubKey = dhKeyPair.getPublic();
             PrivateKey privKey = dhKeyPair.getPrivate();
@@ -129,7 +129,7 @@ public class Client {
 
             //Verification of the identity through Short Authentication String (SAS)
             String sas = SASCalculator.computeSAS(myName, encodedPubKey, peerName, receivedPubKey_Bytes, sharedSecret);
-            System.out.println("\n=== CODICE DI VERIFICA (SAS) ===");
+            System.out.println("\n=== VERIFICATION CODE (SAS) ===");
             System.out.println("Check this code with " + peerName + " via a different channel (phone, in person, etc.): " + sas);
             System.out.println("If it does NOT match the one shown to " + peerName + ", the connection might be intercepted (Man-in-the-Middle): terminate the chat.");
             System.out.print("Does the code match? Type 'Y' to continue, anything else to exit: ");
