@@ -31,7 +31,7 @@ public class SASCalculator {
         byte[] recordA = encodeRecord(nameA, pubKeyA);
         byte[] recordB = encodeRecord(nameB, pubKeyB);
 
-        // Ordinamento canonico: indipendente da chi è "A" e chi è "B"
+        // Canonical ordering: independent of which is "A" and which is "B"
         byte[] first, second;
         if (Arrays.compare(recordA, recordB) <= 0) {
             first = recordA;

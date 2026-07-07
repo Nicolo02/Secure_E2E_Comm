@@ -6,7 +6,7 @@ public class Proxy {
     public static final String USAGE = "Usage: java Server [serverPort>1024]";
     public static final int DEFAULT_PORT = 9999;
     public static final int N_CLIENTS = 2; // number of client expected
-    public static final int SOCKET_TIMEOUT = 60000;    
+    public static final int SOCKET_TIMEOUT = 60000 * 30;    
 
     public static void main(String[] args) throws IOException{
 
@@ -75,7 +75,6 @@ public class Proxy {
 				}
             }
 
-            // Da migliorare
             System.out.println("Server: " + N_CLIENTS + " clients connected, starting threads...");
             new ProxyThread(clientSocket[0], clientSocket[1]).start(); 
             new ProxyThread(clientSocket[1], clientSocket[0]).start(); 

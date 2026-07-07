@@ -14,7 +14,8 @@ import javax.crypto.SecretKey;
 public class Client {
 
     public static final String USAGE = "Usage: java Client serverAddr serverPort yourName";
-    public static final int SOCKET_TIMEOUT = 60000 * 5;
+    public static final int SOCKET_TIMEOUT = 60000 * 30;
+    public static final String ANON = "Anonymous User";
 
     public static void main(String[] args) {
 
@@ -34,12 +35,16 @@ public class Client {
                     System.exit(1);
                 }                
                 myName = args[2];
-                if (myName.isEmpty()){
-                    System.err.println("Name must not be empty.");
-                    System.out.println(USAGE);
+            } else if(args.length == 2){
+                addr = InetAddress.getByName(args[0]);
+                port = Integer.parseInt(args[1]);
+                if (port < 1024 || port > 65536){
+                    System.err.println("Port is outside the range of valid ports. [1024-65535]");
+					System.out.println(USAGE);
                     System.exit(1);
-                }
-            }else{
+                }                
+                myName = ANON;
+            } else{
                 System.out.println(USAGE);                
                 System.exit(1);
             }
@@ -111,33 +116,39 @@ public class Client {
             KeyPair dhKeyPair = DiffieHellman.generateDHKeyPair();
             PublicKey pubKey = dhKeyPair.getPublic();
             PrivateKey privKey = dhKeyPair.getPrivate();
-            //System.out.println("Generated Diffie-Hellman Key Pair: \n PubKey ->" + pubKey + "\n PrivKey ->" + privKey);
+            System.out.println("Generated Diffie-Hellman Key Pair: \n PubKey ->" + pubKey + "\n PrivKey ->" + privKey);
 
             byte[] encodedPubKey = DiffieHellman.getEncodedPubKey(pubKey);
             outputSocket.writeInt(encodedPubKey.length);
             outputSocket.write(encodedPubKey);
-            //System.out.println("Sent public key...");
+            System.out.println("Sent public key...");
             
             int receivedKeyLen = inputSocket.readInt();
             byte [] receivedPubKey_Bytes = new byte[receivedKeyLen];
             inputSocket.readFully(receivedPubKey_Bytes);
             PublicKey peerPubKey = DiffieHellman.decodePublicKey(receivedPubKey_Bytes);
-            //System.out.println("Received public key: " + peerPubKey);
+            System.out.println("Received public key: " + peerPubKey);
 
             byte[] sharedSecret = DiffieHellman.computeSharedSecret(privKey, peerPubKey);
-            //System.out.println("Shared secret computed: " + ConvertingUtils.toHexString(sharedSecret));
+            System.out.println("Shared secret computed: " + ConvertingUtils.toHexString(sharedSecret));
 
-            //Verification of the identity through Short Authentication String (SAS)
-            String sas = SASCalculator.computeSAS(myName, encodedPubKey, peerName, receivedPubKey_Bytes, sharedSecret);
-            System.out.println("\n=== VERIFICATION CODE (SAS) ===");
-            System.out.println("Check this code with " + peerName + " via a different channel (phone, in person, etc.): " + sas);
-            System.out.println("If it does NOT match the one shown to " + peerName + ", the connection might be intercepted (Man-in-the-Middle): terminate the chat.");
-            System.out.print("Does the code match? Type 'Y' to continue, anything else to exit: ");
-            String confirmation = stdIn.readLine();
-            if (confirmation == null || !confirmation.trim().equalsIgnoreCase("y")) {
-                System.out.println("Verification failed or cancelled. Closing the connection.");
-                socket.close();
-                System.exit(1);
+            /*
+            * Verification of the identity through Short Authentication String (SAS)
+            */
+            if (!myName.equals(ANON) && !peerName.equals(ANON)) {
+                String sas = SASCalculator.computeSAS(myName, encodedPubKey, peerName, receivedPubKey_Bytes, sharedSecret);
+                System.out.println("\n=== VERIFICATION CODE (SAS) ===");
+                System.out.println("Check this code with " + peerName + " via a different channel (phone, in person, etc.): " + sas);
+                System.out.println("If it does NOT match the one shown to " + peerName + ", the connection might be intercepted (Man-in-the-Middle): terminate the chat.");
+                System.out.print("Does the code match? Type 'Y' to continue, anything else to exit: ");
+                String confirmation = stdIn.readLine();
+                if (confirmation == null || !confirmation.trim().equalsIgnoreCase("y")) {
+                    System.out.println("Verification failed or cancelled. Closing the connection.");
+                    socket.close();
+                    System.exit(1);
+                }
+            } else {
+                System.out.println("\nSAS Verification skipped (one or both users are anonymous).");
             }
 
             /*
@@ -145,11 +156,11 @@ public class Client {
              * The cipher is initialized with the shared secret as key
              */
             SecretKey aesKey = SymmKeyGen.generateSymmetricKey(sharedSecret);
-            //System.out.println("Derived AES Key: " + aesKey);
+            System.out.println("Derived AES Key: " + aesKey);
             SecureCipher cipher = new SecureCipher(aesKey);
 
             /*
-             * Strarting Clients communcations 
+             * Starting Client communications
              */
             MessageReceiver messageReceiver = new MessageReceiver(inputSocket, cipher, peerName);
             messageReceiver.start();
@@ -158,14 +169,14 @@ public class Client {
 
             while((message = stdIn.readLine()) != null){
 
-                // Costruzione del messaggio con numero di sequenza
+                // Build message with sequence number and payload
                 Message outMessage = new Message(seqCounter++, ConvertingUtils.toByteArray(message));
                 byte[] aad = outMessage.seqNumberToAAD();
 
-                // Cifratura del payload, autenticando anche il numero di sequenza (AAD)
+                // Payload encryption with AES-GCM, using the sequence number as AAD (Additional Authenticated Data)
                 byte[] encryptedPayload = cipher.encrypt(outMessage.getPayload(), aad);
 
-                // Pacchetto sul socket: [ AAD (seq, in chiaro) | IV + ciphertext+tag ]
+                // Message on the socket: [ AAD (seq, in chiaro) | IV + ciphertext+tag ]
                 byte[] packet = new byte[aad.length + encryptedPayload.length];
                 System.arraycopy(aad, 0, packet, 0, aad.length);
                 System.arraycopy(encryptedPayload, 0, packet, aad.length, encryptedPayload.length);

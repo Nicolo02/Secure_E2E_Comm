@@ -34,7 +34,7 @@ public class Message {
     public static long aadToSeqNumber(byte[] aad) {
         if (aad == null || aad.length != SEQ_NUMBER_SIZE) {
             throw new IllegalArgumentException(
-                "AAD non valido: lunghezza attesa " + SEQ_NUMBER_SIZE + " byte, ricevuti " +
+                "Invalid AAD: length expected " + SEQ_NUMBER_SIZE + " bytes, received " +
                 (aad == null ? "null" : aad.length));
         }
         return ByteBuffer.wrap(aad).getLong();

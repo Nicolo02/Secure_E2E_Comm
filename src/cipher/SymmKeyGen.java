@@ -11,7 +11,7 @@ public class SymmKeyGen {
     /**
      * Derives a 128-bit AES key from the shared secret using SHA-256.
      * This method takes a byte array representing the shared secret,
-     * computes its SHA-256 hash, and then extracts the first 128 bits (?)
+     * computes its SHA-256 hash, and then extracts the first 128 bits to create a SecretKey for AES encryption.
      * @param sharedSecret The shared secret byte array.
      * @return A SecretKey object representing the derived AES key.
      */
